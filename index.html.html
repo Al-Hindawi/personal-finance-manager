@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مدير الأموال الشخصي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700&display=swap');
+        body {
+            font-family: 'Tajawal', sans-serif;
+        }
+        
+        /* تحسينات للتجاوب */
+        @media (max-width: 768px) {
+            .container-padding {
+                padding: 1rem;
+            }
+            .mobile-stack {
+                display: flex;
+                flex-direction: column;
+            }
+            .mobile-full {
+                width: 100%;
+            }
+        }
+        
+        /* تحسينات للجدول على الجوال */
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        table {
+            min-width: 600px;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50 text-gray-900">
+    <div class="container-padding">
+        <header class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between mb-6 gap-4">
+            <h1 class="text-2xl font-extrabold text-center sm:text-right">مدير الأموال الشخصي</h1>
+            <div class="flex gap-3 items-center">
+                <div class="text-sm text-gray-500">Light Mode</div>
+                <button class="px-3 py-1 rounded-md bg-indigo-600 text-white text-sm">تجربة سريعة</button>
+            </div>
+        </header>
+
+        <main class="max-w-6xl mx-auto">
+            <!-- صف العناصر الرئيسية -->
+            <div class="flex flex-col lg:flex-row gap-6 mb-6">
+                <!-- عمود إضافة الحركات -->
+                <section class="lg:w-1/3 bg-white rounded-2xl shadow p-4 mobile-full">
+                    <h2 class="font-semibold mb-4 text-lg">أضف حركة مالية</h2>
+                    <form id="transactionForm" class="space-y-4">
+                        <div>
+                            <label class="block text-sm mb-2 font-medium">التاريخ</label>
+                            <input type="date" id="date" class="w-full border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-2 font-medium">نوع الحركة</label>
+                            <select id="type" class="w-full border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="withdraw">سحب</option>
+                                <option value="add">إضافة</option>
+                                <option value="return">إرجاع</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-2 font-medium">الصندوق</label>
+                            <select id="fund" class="w-full border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="operational">تشغيلي</option>
+                                <option value="savings">ادخار وطوارئ</option>
+                                <option value="development">تطوير ذاتي</option>
+                                <option value="vault">الخزنة</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-2 font-medium">المكان</label>
+                            <select id="location" class="w-full border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="wallet">محفظة</option>
+                                <option value="envelope">ظرف</option>
+                                <option value="e-wallet">محفظة إلكترونية</option>
+                                <option value="vault">خزنة</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-2 font-medium">المبلغ (دينار)</label>
+                            <input type="number" id="amount" class="w-full border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="أدخل المبلغ">
+                        </div>
+                        <div>
+                            <label class="block text-sm mb-2 font-medium">الغرض / السبب</label>
+                            <input id="purpose" class="w-full border border-gray-300 px-3 py-2 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" placeholder="وصف الحركة">
+                        </div>
+                        <div class="flex gap-2 pt-2">
+                            <button type="submit" class="flex-1 py-3 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition-colors">حفظ الحركة</button>
+                            <button type="button" id="cancelBtn" class="flex-1 py-3 rounded-lg border border-gray-300 font-medium hover:bg-gray-50 transition-colors">إلغاء</button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- عمود الإحصائيات -->
+                <section class="lg:w-2/3 space-y-6 mobile-full">
+                    <!-- بطاقات الأرصدة -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white rounded-2xl shadow p-4 flex flex-col justify-between border-r-4 border-blue-500">
+                            <div class="text-sm text-gray-600 mb-2">تشغيلي</div>
+                            <div class="text-xl font-bold text-blue-600" id="operational-balance">60,000 د.ع</div>
+                        </div>
+                        <div class="bg-white rounded-2xl shadow p-4 flex flex-col justify-between border-r-4 border-green-500">
+                            <div class="text-sm text-gray-600 mb-2">ادخار وطوارئ</div>
+                            <div class="text-xl font-bold text-green-600" id="savings-balance">118,000 د.ع</div>
+                        </div>
+                        <div class="bg-white rounded-2xl shadow p-4 flex flex-col justify-between border-r-4 border-orange-500">
+                            <div class="text-sm text-gray-600 mb-2">تطوير ذاتي</div>
+                            <div class="text-xl font-bold text-orange-600" id="development-balance">35,000 د.ع</div>
+                        </div>
+                        <div class="bg-white rounded-2xl shadow p-4 flex flex-col justify-between border-r-4 border-purple-500">
+                            <div class="text-sm text-gray-600 mb-2">الخزنة</div>
+                            <div class="text-xl font-bold text-purple-600" id="vault-balance">200,000 د.ع</div>
+                        </div>
+                    </div>
+
+                    <!-- الرسم البياني -->
+                    <div class="bg-white rounded-2xl shadow p-4">
+                        <h3 class="font-semibold mb-4 text-lg">توزيع الأموال</h3>
+                        <div class="h-60 flex items-center justify-center">
+                            <canvas id="fundsChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- ملخص الأماكن -->
+                    <div class="bg-white rounded-2xl shadow p-4">
+                        <h3 class="font-semibold mb-4 text-lg">ملخص الأماكن</h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div class="p-4 border border-gray-200 rounded-lg text-center bg-blue-50">
+                                <div class="text-gray-600 mb-1">محفظة</div>
+                                <div class="text-xl font-bold text-blue-600" id="wallet-total">35,000</div>
+                            </div>
+                            <div class="p-4 border border-gray-200 rounded-lg text-center bg-green-50">
+                                <div class="text-gray-600 mb-1">ظرف</div>
+                                <div class="text-xl font-bold text-green-600" id="envelope-total">90,000</div>
+                            </div>
+                            <div class="p-4 border border-gray-200 rounded-lg text-center bg-purple-50">
+                                <div class="text-gray-600 mb-1">محفظة إلكترونية</div>
+                                <div class="text-xl font-bold text-purple-600" id="e-wallet-total">53,000</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- سجل الحركات -->
+            <section class="bg-white rounded-2xl shadow p-4 mobile-full">
+                <h3 class="font-semibold mb-4 text-lg">سجل الحركات الأخير</h3>
+                <div class="table-container">
+                    <table class="w-full text-sm">
+                        <thead class="text-right text-gray-500 bg-gray-50">
+                            <tr>
+                                <th class="p-3 font-medium">التاريخ</th>
+                                <th class="p-3 font-medium">نوع</th>
+                                <th class="p-3 font-medium">الصندوق</th>
+                                <th class="p-3 font-medium">المكان</th>
+                                <th class="p-3 font-medium">المبلغ</th>
+                                <th class="p-3 font-medium">الغرض</th>
+                                <th class="p-3 font-medium">إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactions-table" class="divide-y divide-gray-200">
+                            <!-- سيتم ملء هذا الجدول ديناميكيًا -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+
+        <footer class="max-w-6xl mx-auto text-center text-xs text-gray-400 mt-8 py-4">
+            نسخة تجريبية — يمكنك استخدام هذا الموقع على الحاسبة والهاتف
+        </footer>
+    </div>
+
+    <script>
+        // تعيين التاريخ الحالي كقيمة افتراضية
+        document.getElementById('date').value = new Date().toISOString().slice(0, 10);
+
+        // بيانات التطبيق
+        let transactions = [
+            { id: 1, date: '2025-11-07', type: 'سحب', fund: 'تشغيلي', location: 'محفظة', amount: 5000, purpose: 'شراء لوحة' },
+            { id: 2, date: '2025-11-13', type: 'إرجاع', fund: 'تشغيلي', location: 'ظرف', amount: 35000, purpose: 'إعادة مبلغ' }
+        ];
+
+        // الأرصدة الافتراضية
+        let balances = {
+            operational: 60000,
+            savings: 118000,
+            development: 35000,
+            vault: 200000
+        };
+
+        // مجموعات الأماكن
+        let locationTotals = {
+            wallet: 35000,
+            envelope: 90000,
+            'e-wallet': 53000
+        };
+
+        // تهيئة التطبيق عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', function() {
+            // عرض الحركات
+            renderTransactions();
+            
+            // تحديث الأرصدة والعناصر الأخرى
+            updateBalances();
+            updateLocationTotals();
+            renderChart();
+            
+            // إعداد مستمعي الأحداث
+            setupEventListeners();
+        });
+
+        // إعداد مستمعي الأحداث
+        function setupEventListeners() {
+            // نموذج إضافة حركة مالية
+            document.getElementById('transactionForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                addTransaction();
+            });
+            
+            // زر الإلغاء
+            document.getElementById('cancelBtn').addEventListener('click', function() {
+                document.getElementById('transactionForm').reset();
+                document.getElementById('date').value = new Date().toISOString().slice(0, 10);
+            });
+        }
+
+        // إضافة حركة مالية جديدة
+        function addTransaction() {
+            const date = document.getElementById('date').value;
+            const type = document.getElementById('type').value;
+            const fund = document.getElementById('fund').value;
+            const location = document.getElementById('location').value;
+            const amount = parseInt(document.getElementById('amount').value);
+            const purpose = document.getElementById('purpose').value;
+            
+            if (!date || !type || !fund || !location || !amount || !purpose) {
+                alert('يرجى ملء جميع الحقول');
+                return;
+            }
+            
+            if (amount <= 0) {
+                alert('يرجى إدخال مبلغ صحيح');
+                return;
+            }
+            
+            // إنشاء حركة جديدة
+            const newTransaction = {
+                id: Date.now(),
+                date: date,
+                type: type === 'withdraw' ? 'سحب' : type === 'add' ? 'إضافة' : 'إرجاع',
+                fund: document.getElementById('fund').options[document.getElementById('fund').selectedIndex].text,
+                location: document.getElementById('location').options[document.getElementById('location').selectedIndex].text,
+                amount: amount,
+                purpose: purpose
+            };
+            
+            // إضافة الحركة إلى القائمة
+            transactions.unshift(newTransaction);
+            
+            // تحديث الأرصدة
+            updateBalancesAfterTransaction(newTransaction);
+            
+            // تحديث واجهة المستخدم
+            renderTransactions();
+            updateBalances();
+            updateLocationTotals();
+            renderChart();
+            
+            // إعادة تعيين النموذج
+            document.getElementById('transactionForm').reset();
+            document.getElementById('date').value = new Date().toISOString().slice(0, 10);
+            
+            alert('تم إضافة الحركة بنجاح!');
+        }
+
+        // تحديث الأرصدة بعد إضافة حركة
+        function updateBalancesAfterTransaction(transaction) {
+            const amount = transaction.amount;
+            const fundKey = getFundKey(transaction.fund);
+            
+            if (transaction.type === 'إضافة' || transaction.type === 'إرجاع') {
+                balances[fundKey] += amount;
+            } else if (transaction.type === 'سحب') {
+                balances[fundKey] -= amount;
+            }
+            
+            // تحديث مجموعات الأماكن
+            const locationKey = getLocationKey(transaction.location);
+            if (transaction.type === 'إضافة' || transaction.type === 'إرجاع') {
+                locationTotals[locationKey] += amount;
+            } else if (transaction.type === 'سحب') {
+                locationTotals[locationKey] -= amount;
+            }
+        }
+
+        // الحصول على مفتاح الصندوق
+        function getFundKey(fundName) {
+            const fundMap = {
+                'تشغيلي': 'operational',
+                'ادخار وطوارئ': 'savings',
+                'تطوير ذاتي': 'development',
+                'الخزنة': 'vault'
+            };
+            return fundMap[fundName];
+        }
+
+        // الحصول على مفتاح المكان
+        function getLocationKey(locationName) {
+            const locationMap = {
+                'محفظة': 'wallet',
+                'ظرف': 'envelope',
+                'محفظة إلكترونية': 'e-wallet',
+                'خزنة': 'vault'
+            };
+            return locationMap[locationName];
+        }
+
+        // عرض الحركات في الجدول
+        function renderTransactions() {
+            const tableBody = document.getElementById('transactions-table');
+            tableBody.innerHTML = '';
+            
+            if (transactions.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td colspan="7" class="p-4 text-center text-gray-500">
+                        لا توجد حركات مالية مسجلة
+                    </td>
+                `;
+                tableBody.appendChild(row);
+                return;
+            }
+            
+            transactions.forEach(transaction => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors';
+                
+                // تحديد لون النص بناءً على نوع الحركة
+                let amountColor = 'text-gray-700';
+                if (transaction.type === 'إضافة') amountColor = 'text-green-600';
+                if (transaction.type === 'سحب') amountColor = 'text-red-600';
+                
+                row.innerHTML = `
+                    <td class="p-3">${transaction.date}</td>
+                    <td class="p-3">
+                        <span class="px-2 py-1 rounded-full text-xs ${
+                            transaction.type === 'إضافة' ? 'bg-green-100 text-green-800' :
+                            transaction.type === 'سحب' ? 'bg-red-100 text-red-800' :
+                            'bg-blue-100 text-blue-800'
+                        }">
+                            ${transaction.type}
+                        </span>
+                    </td>
+                    <td class="p-3">${transaction.fund}</td>
+                    <td class="p-3">${transaction.location}</td>
+                    <td class="p-3 font-medium ${amountColor}">${transaction.amount.toLocaleString()} د.ع</td>
+                    <td class="p-3">${transaction.purpose}</td>
+                    <td class="p-3">
+                        <button class="text-red-500 text-xs hover:text-red-700 transition-colors" onclick="deleteTransaction(${transaction.id})">
+                            حذف
+                        </button>
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // حذف حركة
+        function deleteTransaction(id) {
+            if (confirm('هل أنت متأكد من حذف هذه الحركة؟')) {
+                // العثور على الحركة
+                const transactionIndex = transactions.findIndex(t => t.id === id);
+                if (transactionIndex !== -1) {
+                    const transaction = transactions[transactionIndex];
+                    
+                    // التراجع عن تأثير الحركة على الأرصدة
+                    const amount = transaction.amount;
+                    const fundKey = getFundKey(transaction.fund);
+                    
+                    if (transaction.type === 'إضافة' || transaction.type === 'إرجاع') {
+                        balances[fundKey] -= amount;
+                    } else if (transaction.type === 'سحب') {
+                        balances[fundKey] += amount;
+                    }
+                    
+                    // التراجع عن تأثير الحركة على مجموعات الأماكن
+                    const locationKey = getLocationKey(transaction.location);
+                    if (transaction.type === 'إضافة' || transaction.type === 'إرجاع') {
+                        locationTotals[locationKey] -= amount;
+                    } else if (transaction.type === 'سحب') {
+                        locationTotals[locationKey] += amount;
+                    }
+                    
+                    // حذف الحركة
+                    transactions.splice(transactionIndex, 1);
+                    
+                    // تحديث واجهة المستخدم
+                    renderTransactions();
+                    updateBalances();
+                    updateLocationTotals();
+                    renderChart();
+                    
+                    alert('تم حذف الحركة بنجاح!');
+                }
+            }
+        }
+
+        // تحديث عرض الأرصدة
+        function updateBalances() {
+            document.getElementById('operational-balance').textContent = `${balances.operational.toLocaleString()} د.ع`;
+            document.getElementById('savings-balance').textContent = `${balances.savings.toLocaleString()} د.ع`;
+            document.getElementById('development-balance').textContent = `${balances.development.toLocaleString()} د.ع`;
+            document.getElementById('vault-balance').textContent = `${balances.vault.toLocaleString()} د.ع`;
+        }
+
+        // تحديث عرض مجموعات الأماكن
+        function updateLocationTotals() {
+            document.getElementById('wallet-total').textContent = locationTotals.wallet.toLocaleString();
+            document.getElementById('envelope-total').textContent = locationTotals.envelope.toLocaleString();
+            document.getElementById('e-wallet-total').textContent = locationTotals['e-wallet'].toLocaleString();
+        }
+
+        // رسم الرسم البياني
+        function renderChart() {
+            const ctx = document.getElementById('fundsChart').getContext('2d');
+            
+            // إذا كان هناك رسم بياني موجود، قم بتدميره أولاً
+            if (window.fundsChart) {
+                window.fundsChart.destroy();
+            }
+            
+            window.fundsChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['تشغيلي', 'ادخار وطوارئ', 'تطوير ذاتي', 'الخزنة'],
+                    datasets: [{
+                        data: [
+                            balances.operational,
+                            balances.savings,
+                            balances.development,
+                            balances.vault
+                        ],
+                        backgroundColor: [
+                            'rgba(59, 130, 246, 0.8)',
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(249, 115, 22, 0.8)',
+                            'rgba(139, 92, 246, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgb(59, 130, 246)',
+                            'rgb(16, 185, 129)',
+                            'rgb(249, 115, 22)',
+                            'rgb(139, 92, 246)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            rtl: true,
+                            labels: {
+                                padding: 15,
+                                usePointStyle: true
+                            }
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+        }
+    </script>
+</body>
+</html>
